@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows Version Detector</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .result {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .windows-10 {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+        .windows-11 {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border-left: 4px solid #7b1fa2;
+        }
+        .unknown {
+            background: #fff3e0;
+            color: #e65100;
+            border-left: 4px solid #e65100;
+        }
+        .info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+        .info strong {
+            color: #333;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪟 Windows Version Detector</h1>
+        
+        <div id="result"></div>
+        
+        <button onclick="detectWindows()">Detect Again</button>
+        
+        <div class="info">
+            <strong>Technical Details:</strong>
+            <div id="technical-info"></div>
+        </div>
+    </div>
+
+    <script>
+        async function detectWindows() {
+            const resultDiv = document.getElementById('result');
+            const techDiv = document.getElementById('technical-info');
+            
+            let windowsVersion = 'Unknown';
+            let detectionMethod = '';
+            let technicalDetails = '';
+            
+            // Check if User-Agent Client Hints are supported
+            if (navigator.userAgentData) {
+                try {
+                    const ua = await navigator.userAgentData.getHighEntropyValues(['platformVersion']);
+                    
+                    if (ua.platform === 'Windows') {
+                        const platformVersion = ua.platformVersion;
+                        const majorVersion = parseInt(platformVersion.split('.')[0]);
+                        
+                        technicalDetails += `Platform: ${ua.platform}<br>`;
+                        technicalDetails += `Platform Version: ${platformVersion}<br>`;
+                        
+                        if (majorVersion >= 13) {
+                            windowsVersion = 'Windows 11';
+                            resultDiv.className = 'result windows-11';
+                            resultDiv.innerHTML = '✅ You are using <strong>Windows 11</strong>';
+                        } else if (majorVersion > 0) {
+                            windowsVersion = 'Windows 10';
+                            resultDiv.className = 'result windows-10';
+                            resultDiv.innerHTML = '✅ You are using <strong>Windows 10</strong>';
+                        }
+                        
+                        detectionMethod = 'User-Agent Client Hints (Accurate)';
+                    }
+                } catch (error) {
+                    console.error('Error detecting Windows version:', error);
+                }
+            }
+            
+            // Fallback to User Agent string (less reliable)
+            if (windowsVersion === 'Unknown') {
+                const userAgent = navigator.userAgent;
+                technicalDetails += `User Agent: ${userAgent}<br>`;
+                
+                if (userAgent.includes('Windows NT 10.0')) {
+                    windowsVersion = 'Windows 10 or 11';
+                    resultDiv.className = 'result unknown';
+                    resultDiv.innerHTML = '⚠️ You are using <strong>Windows 10 or 11</strong><br><small>(Cannot distinguish between versions with this browser)</small>';
+                    detectionMethod = 'User Agent String (Limited)';
+                } else if (userAgent.includes('Windows')) {
+                    windowsVersion = 'Windows (Other Version)';
+                    resultDiv.className = 'result unknown';
+                    resultDiv.innerHTML = '⚠️ You are using <strong>Windows</strong> (older version or undetectable)';
+                    detectionMethod = 'User Agent String';
+                } else {
+                    windowsVersion = 'Not Windows';
+                    resultDiv.className = 'result unknown';
+                    resultDiv.innerHTML = '❌ You are <strong>not using Windows</strong>';
+                    detectionMethod = 'User Agent String';
+                }
+            }
+            
+            technicalDetails += `<br><strong>Detection Method:</strong> ${detectionMethod}<br>`;
+            technicalDetails += `<strong>Browser:</strong> ${navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)/)?.[0] || 'Unknown'}`;
+            
+            techDiv.innerHTML = technicalDetails;
+        }
+        
+        // Run detection on page load
+        detectWindows();
+    </script>
+</body>
+</html>
